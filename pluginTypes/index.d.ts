@@ -48,9 +48,10 @@ declare module "@scom/scom-accordion" {
         set expanded(value: boolean);
         setData(data: IConfig): Promise<void>;
         getData(): IConfig;
+        addChild(item: Control): void;
         private renderUI;
         private toggleExpandablePanel;
-        private updateUI;
+        private updatePanel;
         init(): Promise<void>;
         render(): any;
     }

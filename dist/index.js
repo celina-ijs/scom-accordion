@@ -76,26 +76,32 @@ define("@scom/scom-accordion", ["require", "exports", "@ijstech/components", "@s
         getData() {
             return this._data;
         }
+        addChild(item) {
+            this.pnlContent.clearInnerHTML();
+            if (!item)
+                return;
+            item.parent = this.pnlContent;
+            this.pnlContent.appendChild(item);
+        }
         async renderUI() {
             var _a;
-            console.log('renderUI');
             this.lbTitle.caption = (_a = this._data.name) !== null && _a !== void 0 ? _a : '';
             this.pnlContent.clearInnerHTML();
             if (this.description) {
-                const lb = this.$render("i-label", { caption: this.description });
-                this.pnlContent.appendChild(lb);
+                this.pnlContent.appendChild(this.$render("i-label", { caption: this.description }));
             }
-            if (!this.expanded && this.isFirstLoad && this.defaultExpanded)
+            if (!this.expanded && this.isFirstLoad && this.defaultExpanded) {
                 this.expanded = true;
-            this.updateUI();
+            }
+            this.updatePanel();
         }
         toggleExpandablePanel(c) {
             this.expanded = !this.expanded;
-            this.updateUI();
+            this.updatePanel();
             if (this.onChanged)
                 this.onChanged(this, this.expanded);
         }
-        updateUI() {
+        updatePanel() {
             const icon = this.pnlAccordion.querySelector('i-icon.expandable-icon');
             if (this.expanded) {
                 if (icon)
