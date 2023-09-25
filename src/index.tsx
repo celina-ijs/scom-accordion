@@ -88,25 +88,32 @@ export default class ScomAccordion extends Module {
     return this._data;
   }
 
+  addChild(item: Control) {
+    this.pnlContent.clearInnerHTML();
+    if (!item) return;
+    item.parent = this.pnlContent;
+    this.pnlContent.appendChild(item);
+  }
+
   private async renderUI() {
     this.lbTitle.caption = this._data.name ?? '';
     this.pnlContent.clearInnerHTML();
     if (this.description) {
-      const lb = <i-label caption={this.description}></i-label>
-      this.pnlContent.appendChild(lb);
+      this.pnlContent.appendChild(<i-label caption={this.description}></i-label>);
     }
-    if (!this.expanded && this.isFirstLoad && this.defaultExpanded)
+    if (!this.expanded && this.isFirstLoad && this.defaultExpanded) {
       this.expanded = true;
-    this.updateUI();
+    }
+    this.updatePanel();
   }
 
   private toggleExpandablePanel(c: Control) {
     this.expanded = !this.expanded;
-    this.updateUI();
+    this.updatePanel();
     if (this.onChanged) this.onChanged(this, this.expanded);
   }
 
-  private updateUI() {
+  private updatePanel() {
     const icon: Icon = this.pnlAccordion.querySelector('i-icon.expandable-icon');
     if (this.expanded) {
       if (icon) icon.name = 'angle-down';

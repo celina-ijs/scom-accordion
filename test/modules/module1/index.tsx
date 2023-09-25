@@ -3,7 +3,6 @@ import ScomAccordion from '@scom/scom-accordion';
 
 @customModule
 export default class Module1 extends Module {
-    private elm: ScomAccordion
     constructor(parent?: Container, options?: any) {
         super(parent, options);
     }
@@ -13,12 +12,16 @@ export default class Module1 extends Module {
     }
 
     render() {
-        return <i-panel padding={{ left: '1rem', right: '1rem', top: '1rem', bottom: '1rem' }} id="panel">
+        return <i-vstack padding={{ left: '1rem', right: '1rem', top: '1rem', bottom: '1rem' }} id="panel">
             <i-scom-accordion
-                id="elm"
-                name="Example"
+                name="Heading 1"
+                description='Description'
+                defaultExpanded={true}
+            />
+             <i-scom-accordion
+                name="Heading 2"
                 description='Description'
             />
-        </i-panel>
+        </i-vstack>
     }
 }
