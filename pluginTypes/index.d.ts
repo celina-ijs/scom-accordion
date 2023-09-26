@@ -1,10 +1,15 @@
 /// <amd-module name="@scom/scom-accordion/interface.ts" />
 declare module "@scom/scom-accordion/interface.ts" {
-    export interface IConfig {
+    import { Control } from "@ijstech/components";
+    export interface IAccordionItem {
         name: string;
-        description?: string;
         expanded?: boolean;
         defaultExpanded?: boolean;
+        onRender: () => Control;
+    }
+    export interface IAccordion {
+        items: IAccordionItem[];
+        isFlush?: boolean;
     }
 }
 /// <amd-module name="@scom/scom-accordion/index.css.ts" />
@@ -12,15 +17,59 @@ declare module "@scom/scom-accordion/index.css.ts" {
     export const customStyles: string;
     export const expandablePanelStyle: string;
 }
+/// <amd-module name="@scom/scom-accordion/commons/accordionItem/index.css.ts" />
+declare module "@scom/scom-accordion/commons/accordionItem/index.css.ts" {
+    export const customStyles: string;
+    export const expandablePanelStyle: string;
+}
+/// <amd-module name="@scom/scom-accordion/commons/accordionItem/index.tsx" />
+declare module "@scom/scom-accordion/commons/accordionItem/index.tsx" {
+    import { Container, Control, ControlElement, Module } from '@ijstech/components';
+    import { IAccordionItem } from "@scom/scom-accordion/interface.ts";
+    interface ScomAccordionItemElement extends ControlElement {
+        name?: string;
+        defaultExpanded?: boolean;
+        onRender?: () => Control;
+    }
+    global {
+        namespace JSX {
+            interface IntrinsicElements {
+                ['i-scom-accordion-item']: ScomAccordionItemElement;
+            }
+        }
+    }
+    export default class ScomAccordionItem extends Module {
+        private pnlAccordionItem;
+        private lbTitle;
+        private pnlContent;
+        private iconExpand;
+        private _data;
+        constructor(parent?: Container, options?: any);
+        static create(options?: ScomAccordionItemElement, parent?: Container): Promise<ScomAccordionItem>;
+        get name(): string;
+        set name(value: string);
+        get defaultExpanded(): boolean;
+        set defaultExpanded(value: boolean);
+        get expanded(): boolean;
+        set expanded(value: boolean);
+        get onRender(): any;
+        set onRender(callback: any);
+        setData(data: IAccordionItem): Promise<void>;
+        getData(): IAccordionItem;
+        private renderUI;
+        private onTogglePanel;
+        private updatePanel;
+        init(): Promise<void>;
+        render(): any;
+    }
+}
 /// <amd-module name="@scom/scom-accordion" />
 declare module "@scom/scom-accordion" {
     import { Container, Control, ControlElement, Module } from '@ijstech/components';
-    import { IConfig } from "@scom/scom-accordion/interface.ts";
+    import { IAccordion, IAccordionItem } from "@scom/scom-accordion/interface.ts";
     interface ScomAccordionElement extends ControlElement {
-        name: string;
-        description?: string;
-        defaultExpanded?: boolean;
-        onChanged?: (target: Control, expanded: boolean) => void;
+        items?: IAccordionItem[];
+        isFlush?: boolean;
     }
     global {
         namespace JSX {
@@ -31,27 +80,20 @@ declare module "@scom/scom-accordion" {
     }
     export default class ScomAccordion extends Module {
         private pnlAccordion;
-        private lbTitle;
-        private pnlContent;
+        private accordionItemMapper;
         private _data;
-        private isFirstLoad;
         onChanged: (target: Control, expanded: boolean) => void;
         constructor(parent?: Container, options?: any);
         static create(options?: ScomAccordionElement, parent?: Container): Promise<ScomAccordion>;
-        get name(): string;
-        set name(value: string);
-        get description(): string;
-        set description(value: string);
-        get defaultExpanded(): boolean;
-        set defaultExpanded(value: boolean);
-        get expanded(): boolean;
-        set expanded(value: boolean);
-        setData(data: IConfig): Promise<void>;
-        getData(): IConfig;
-        addChild(item: Control): void;
+        get items(): IAccordionItem[];
+        set items(value: IAccordionItem[]);
+        get isFlush(): boolean;
+        set isFlush(value: boolean);
+        setData(data: IAccordion): Promise<void>;
+        getData(): IAccordion;
+        private resetData;
         private renderUI;
-        private toggleExpandablePanel;
-        private updatePanel;
+        private onClickedItem;
         init(): Promise<void>;
         render(): any;
     }

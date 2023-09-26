@@ -26,14 +26,38 @@ define("@scom/scom-accordion/index.css.ts", ["require", "exports", "@ijstech/com
         }
     });
 });
-define("@scom/scom-accordion", ["require", "exports", "@ijstech/components", "@scom/scom-accordion/index.css.ts"], function (require, exports, components_2, index_css_1) {
+define("@scom/scom-accordion/commons/accordionItem/index.css.ts", ["require", "exports", "@ijstech/components"], function (require, exports, components_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    exports.expandablePanelStyle = exports.customStyles = void 0;
     const Theme = components_2.Styles.Theme.ThemeVars;
-    let ScomAccordion = class ScomAccordion extends components_2.Module {
+    exports.customStyles = components_2.Styles.style({
+        $nest: {
+            '.accordion-body': {
+                transition: 'height 0.4s ease-in',
+                height: 0
+            },
+            '&.expanded > .accordion-body': {
+                height: 'auto'
+            },
+            '.accordion-header': {}
+        }
+    });
+    exports.expandablePanelStyle = components_2.Styles.style({
+        $nest: {
+            'i-panel': {
+                border: 'none'
+            }
+        }
+    });
+});
+define("@scom/scom-accordion/commons/accordionItem/index.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-accordion/commons/accordionItem/index.css.ts"], function (require, exports, components_3, index_css_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    const Theme = components_3.Styles.Theme.ThemeVars;
+    let ScomAccordionItem = class ScomAccordionItem extends components_3.Module {
         constructor(parent, options) {
             super(parent, options);
-            this.isFirstLoad = false;
         }
         static async create(options, parent) {
             let self = new this(parent, options);
@@ -46,13 +70,6 @@ define("@scom/scom-accordion", ["require", "exports", "@ijstech/components", "@s
         }
         set name(value) {
             this._data.name = value !== null && value !== void 0 ? value : '';
-        }
-        get description() {
-            var _a;
-            return (_a = this._data.description) !== null && _a !== void 0 ? _a : '';
-        }
-        set description(value) {
-            this._data.description = value !== null && value !== void 0 ? value : '';
         }
         get defaultExpanded() {
             var _a;
@@ -67,74 +84,148 @@ define("@scom/scom-accordion", ["require", "exports", "@ijstech/components", "@s
         }
         set expanded(value) {
             this._data.expanded = value !== null && value !== void 0 ? value : false;
+            this.updatePanel();
+        }
+        get onRender() {
+            return this._data.onRender;
+        }
+        set onRender(callback) {
+            this._data.onRender = callback;
         }
         async setData(data) {
             this._data = data;
             await this.renderUI();
-            this.isFirstLoad = false;
         }
         getData() {
             return this._data;
-        }
-        addChild(item) {
-            this.pnlContent.clearInnerHTML();
-            if (!item)
-                return;
-            item.parent = this.pnlContent;
-            this.pnlContent.appendChild(item);
         }
         async renderUI() {
             var _a;
             this.lbTitle.caption = (_a = this._data.name) !== null && _a !== void 0 ? _a : '';
             this.pnlContent.clearInnerHTML();
-            if (this.description) {
-                this.pnlContent.appendChild(this.$render("i-label", { caption: this.description }));
+            if (this.onRender) {
+                const control = await this.onRender();
+                if (control) {
+                    control.parent = this.pnlContent;
+                    this.pnlContent.appendChild(control);
+                }
             }
-            if (!this.expanded && this.isFirstLoad && this.defaultExpanded) {
-                this.expanded = true;
-            }
-            this.updatePanel();
+            this.expanded = !this.expanded && this.defaultExpanded;
         }
-        toggleExpandablePanel(c) {
-            this.expanded = !this.expanded;
-            this.updatePanel();
-            if (this.onChanged)
-                this.onChanged(this, this.expanded);
+        onTogglePanel(target, event) {
+            // this.expanded = !this.expanded;
+            // this.updatePanel();
+            if (this.onClick)
+                this.onClick(this, event);
         }
         updatePanel() {
-            const icon = this.pnlAccordion.querySelector('i-icon.expandable-icon');
             if (this.expanded) {
-                if (icon)
-                    icon.name = 'angle-down';
+                this.iconExpand.name = 'angle-down';
                 this.pnlContent.visible = true;
-                this.pnlAccordion.classList.add('expanded');
+                this.pnlAccordionItem.classList.add('expanded');
             }
             else {
-                if (icon)
-                    icon.name = 'angle-right';
+                this.iconExpand.name = 'angle-right';
                 this.pnlContent.visible = false;
-                this.pnlAccordion.classList.remove('expanded');
+                this.pnlAccordionItem.classList.remove('expanded');
             }
         }
         async init() {
             super.init();
             const name = this.getAttribute('name', true);
-            const description = this.getAttribute('description', true, '');
             const defaultExpanded = this.getAttribute('defaultExpanded', true, false);
-            this.isFirstLoad = true;
-            await this.setData({ name, defaultExpanded, description });
+            const onRender = this.getAttribute('onRender', true);
+            await this.setData({ name, defaultExpanded, onRender });
         }
         render() {
-            return (this.$render("i-panel", { class: index_css_1.customStyles },
-                this.$render("i-vstack", { id: "pnlAccordion", padding: { top: '0.5rem', bottom: '0.5rem', left: '0.5rem', right: '0.5rem' }, class: 'accordion' },
-                    this.$render("i-hstack", { horizontalAlignment: "space-between", verticalAlignment: "center", padding: { top: '0.5rem', bottom: '0.5rem' }, class: "expanded pointer", onClick: this.toggleExpandablePanel },
-                        this.$render("i-label", { id: "lbTitle", caption: '', font: { size: '1rem' }, lineHeight: 1.3 }),
-                        this.$render("i-icon", { class: "expandable-icon", width: 20, height: 28, fill: Theme.text.primary, name: "angle-down" })),
-                    this.$render("i-panel", { id: "pnlContent", class: `accordion-content ${index_css_1.expandablePanelStyle}` }))));
+            return (this.$render("i-vstack", { id: "pnlAccordionItem", padding: { top: '0.5rem', bottom: '0.5rem', left: '0.5rem', right: '0.5rem' }, class: index_css_1.customStyles },
+                this.$render("i-hstack", { horizontalAlignment: "space-between", verticalAlignment: "center", padding: { top: '0.5rem', bottom: '0.5rem' }, class: "pointer accordion-header", onClick: this.onTogglePanel },
+                    this.$render("i-label", { id: "lbTitle", caption: '', font: { size: '1rem' }, lineHeight: 1.3 }),
+                    this.$render("i-icon", { id: "iconExpand", width: 20, height: 28, fill: Theme.text.primary, name: "angle-down" })),
+                this.$render("i-panel", { id: "pnlContent", class: `accordion-body ${index_css_1.expandablePanelStyle}` })));
+        }
+    };
+    ScomAccordionItem = __decorate([
+        (0, components_3.customElements)('i-scom-accordion-item')
+    ], ScomAccordionItem);
+    exports.default = ScomAccordionItem;
+});
+define("@scom/scom-accordion", ["require", "exports", "@ijstech/components", "@scom/scom-accordion/index.css.ts"], function (require, exports, components_4, index_css_2) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    let ScomAccordion = class ScomAccordion extends components_4.Module {
+        constructor(parent, options) {
+            super(parent, options);
+            this._data = {
+                items: []
+            };
+            this.onClickedItem = this.onClickedItem.bind(this);
+        }
+        static async create(options, parent) {
+            let self = new this(parent, options);
+            await self.ready();
+            return self;
+        }
+        get items() {
+            var _a;
+            return (_a = this._data.items) !== null && _a !== void 0 ? _a : [];
+        }
+        set items(value) {
+            this._data.items = value !== null && value !== void 0 ? value : [];
+        }
+        get isFlush() {
+            var _a;
+            return (_a = this._data.isFlush) !== null && _a !== void 0 ? _a : false;
+        }
+        set isFlush(value) {
+            this._data.isFlush = value !== null && value !== void 0 ? value : false;
+        }
+        async setData(data) {
+            this._data = data;
+            await this.renderUI();
+        }
+        getData() {
+            return this._data;
+        }
+        resetData() {
+            this.pnlAccordion.clearInnerHTML();
+            this.accordionItemMapper = [];
+        }
+        async renderUI() {
+            this.resetData();
+            for (let i = 0; i < this.items.length; i++) {
+                const itemElm = this.$render("i-scom-accordion-item", { class: "accordion-item" });
+                await itemElm.setData(Object.assign({}, this.items[i]));
+                itemElm.id = `accordion-${i}`;
+                itemElm.onClick = this.onClickedItem;
+                this.pnlAccordion.appendChild(itemElm);
+                this.accordionItemMapper.push(itemElm);
+            }
+        }
+        onClickedItem(target) {
+            const id = target.id;
+            const currentActive = this.accordionItemMapper.find(item => item.id === id);
+            if (this.isFlush) {
+                for (let item of this.accordionItemMapper) {
+                    if (item.id !== id)
+                        item.expanded = false;
+                }
+            }
+            if (currentActive)
+                currentActive.expanded = !currentActive.expanded;
+        }
+        async init() {
+            super.init();
+            const items = this.getAttribute('items', true, []);
+            const isFlush = this.getAttribute('isFlush', true, false);
+            await this.setData({ items, isFlush });
+        }
+        render() {
+            return (this.$render("i-vstack", { id: "pnlAccordion", class: index_css_2.customStyles }));
         }
     };
     ScomAccordion = __decorate([
-        (0, components_2.customElements)('i-scom-accordion')
+        (0, components_4.customElements)('i-scom-accordion')
     ], ScomAccordion);
     exports.default = ScomAccordion;
 });
