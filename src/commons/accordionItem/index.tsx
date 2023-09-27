@@ -14,10 +14,12 @@ import { customStyles, expandablePanelStyle } from './index.css';
 
 const Theme = Styles.Theme.ThemeVars;
 
+type onSelectedFn = (target: Control) => void;
 interface ScomAccordionItemElement extends ControlElement {
   name?: string;
   defaultExpanded?: boolean;
   onRender?: () => Control;
+  onSelected?: onSelectedFn;
 }
 
 declare global {
@@ -36,6 +38,8 @@ export default class ScomAccordionItem extends Module {
   private iconExpand: Icon;
 
   private _data: IAccordionItem;
+
+  public onSelected: onSelectedFn;
 
   constructor(parent?: Container, options?: any) {
     super(parent, options);
@@ -86,7 +90,9 @@ export default class ScomAccordionItem extends Module {
   }
 
   private async renderUI() {
+    if (!this.lbTitle.isConnected) await this.lbTitle.ready();
     this.lbTitle.caption = this._data.name ?? '';
+    if (!this.pnlContent.isConnected) await this.pnlContent.ready();
     this.pnlContent.clearInnerHTML();
     if (this.onRender) {
       const control = await this.onRender();
@@ -101,7 +107,8 @@ export default class ScomAccordionItem extends Module {
   private onTogglePanel(target: Control, event: MouseEvent) {
     // this.expanded = !this.expanded;
     // this.updatePanel();
-    if (this.onClick) this.onClick(this, event)
+    event.stopPropagation();
+    if (this.onSelected) this.onSelected(this)
   }
 
   private updatePanel() {
@@ -118,6 +125,7 @@ export default class ScomAccordionItem extends Module {
 
   async init() {
     super.init();
+    this.onSelected = this.getAttribute('onSelected', true) || this.onSelected;
     const name = this.getAttribute('name', true);
     const defaultExpanded = this.getAttribute('defaultExpanded', true, false);
     const onRender = this.getAttribute('onRender', true);

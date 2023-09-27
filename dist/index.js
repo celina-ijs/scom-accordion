@@ -101,7 +101,11 @@ define("@scom/scom-accordion/commons/accordionItem/index.tsx", ["require", "expo
         }
         async renderUI() {
             var _a;
+            if (!this.lbTitle.isConnected)
+                await this.lbTitle.ready();
             this.lbTitle.caption = (_a = this._data.name) !== null && _a !== void 0 ? _a : '';
+            if (!this.pnlContent.isConnected)
+                await this.pnlContent.ready();
             this.pnlContent.clearInnerHTML();
             if (this.onRender) {
                 const control = await this.onRender();
@@ -115,8 +119,9 @@ define("@scom/scom-accordion/commons/accordionItem/index.tsx", ["require", "expo
         onTogglePanel(target, event) {
             // this.expanded = !this.expanded;
             // this.updatePanel();
-            if (this.onClick)
-                this.onClick(this, event);
+            event.stopPropagation();
+            if (this.onSelected)
+                this.onSelected(this);
         }
         updatePanel() {
             if (this.expanded) {
@@ -132,6 +137,7 @@ define("@scom/scom-accordion/commons/accordionItem/index.tsx", ["require", "expo
         }
         async init() {
             super.init();
+            this.onSelected = this.getAttribute('onSelected', true) || this.onSelected;
             const name = this.getAttribute('name', true);
             const defaultExpanded = this.getAttribute('defaultExpanded', true, false);
             const onRender = this.getAttribute('onRender', true);
@@ -150,10 +156,11 @@ define("@scom/scom-accordion/commons/accordionItem/index.tsx", ["require", "expo
     ], ScomAccordionItem);
     exports.default = ScomAccordionItem;
 });
-define("@scom/scom-accordion", ["require", "exports", "@ijstech/components", "@scom/scom-accordion/index.css.ts"], function (require, exports, components_4, index_css_2) {
+define("@scom/scom-accordion", ["require", "exports", "@ijstech/components", "@scom/scom-accordion/index.css.ts", "@scom/scom-accordion/commons/accordionItem/index.tsx"], function (require, exports, components_4, index_css_2, index_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     let ScomAccordion = class ScomAccordion extends components_4.Module {
+        // public onChanged: (target: Control, expanded: boolean) => void;
         constructor(parent, options) {
             super(parent, options);
             this._data = {
@@ -192,12 +199,13 @@ define("@scom/scom-accordion", ["require", "exports", "@ijstech/components", "@s
             this.accordionItemMapper = [];
         }
         async renderUI() {
+            var _a, _b;
             this.resetData();
             for (let i = 0; i < this.items.length; i++) {
-                const itemElm = this.$render("i-scom-accordion-item", { class: "accordion-item" });
-                await itemElm.setData(Object.assign({}, this.items[i]));
-                itemElm.id = `accordion-${i}`;
-                itemElm.onClick = this.onClickedItem;
+                const itemElm = await index_1.default.create(Object.assign({}, this.items[i]));
+                itemElm.classList.add('accordion-item');
+                itemElm.id = (_b = (_a = this.items[i]) === null || _a === void 0 ? void 0 : _a.id) !== null && _b !== void 0 ? _b : `accordion-${i}`;
+                itemElm.onSelected = this.onClickedItem;
                 this.pnlAccordion.appendChild(itemElm);
                 this.accordionItemMapper.push(itemElm);
             }

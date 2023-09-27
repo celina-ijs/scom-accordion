@@ -1,6 +1,6 @@
-import { Control } from "@ijstech/components";
+import { Control, ControlElement } from "@ijstech/components";
 
-export interface IAccordionItem {
+export interface IAccordionItem extends ControlElement {
   name: string;
   expanded?: boolean;
   defaultExpanded?: boolean;
