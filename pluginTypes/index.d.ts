@@ -1,7 +1,7 @@
 /// <amd-module name="@scom/scom-accordion/interface.ts" />
 declare module "@scom/scom-accordion/interface.ts" {
-    import { Control } from "@ijstech/components";
-    export interface IAccordionItem {
+    import { Control, ControlElement } from "@ijstech/components";
+    export interface IAccordionItem extends ControlElement {
         name: string;
         expanded?: boolean;
         defaultExpanded?: boolean;
@@ -26,10 +26,12 @@ declare module "@scom/scom-accordion/commons/accordionItem/index.css.ts" {
 declare module "@scom/scom-accordion/commons/accordionItem/index.tsx" {
     import { Container, Control, ControlElement, Module } from '@ijstech/components';
     import { IAccordionItem } from "@scom/scom-accordion/interface.ts";
+    type onSelectedFn = (target: Control) => void;
     interface ScomAccordionItemElement extends ControlElement {
         name?: string;
         defaultExpanded?: boolean;
         onRender?: () => Control;
+        onSelected?: onSelectedFn;
     }
     global {
         namespace JSX {
@@ -44,6 +46,7 @@ declare module "@scom/scom-accordion/commons/accordionItem/index.tsx" {
         private pnlContent;
         private iconExpand;
         private _data;
+        onSelected: onSelectedFn;
         constructor(parent?: Container, options?: any);
         static create(options?: ScomAccordionItemElement, parent?: Container): Promise<ScomAccordionItem>;
         get name(): string;
@@ -65,7 +68,7 @@ declare module "@scom/scom-accordion/commons/accordionItem/index.tsx" {
 }
 /// <amd-module name="@scom/scom-accordion" />
 declare module "@scom/scom-accordion" {
-    import { Container, Control, ControlElement, Module } from '@ijstech/components';
+    import { Container, ControlElement, Module } from '@ijstech/components';
     import { IAccordion, IAccordionItem } from "@scom/scom-accordion/interface.ts";
     interface ScomAccordionElement extends ControlElement {
         items?: IAccordionItem[];
@@ -82,7 +85,6 @@ declare module "@scom/scom-accordion" {
         private pnlAccordion;
         private accordionItemMapper;
         private _data;
-        onChanged: (target: Control, expanded: boolean) => void;
         constructor(parent?: Container, options?: any);
         static create(options?: ScomAccordionElement, parent?: Container): Promise<ScomAccordion>;
         get items(): IAccordionItem[];

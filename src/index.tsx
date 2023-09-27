@@ -32,7 +32,7 @@ export default class ScomAccordion extends Module {
     items: []
   };
 
-  public onChanged: (target: Control, expanded: boolean) => void;
+  // public onChanged: (target: Control, expanded: boolean) => void;
 
   constructor(parent?: Container, options?: any) {
     super(parent, options);
@@ -76,10 +76,10 @@ export default class ScomAccordion extends Module {
   private async renderUI() {
     this.resetData();
     for (let i = 0; i < this.items.length; i++) {
-      const itemElm = <i-scom-accordion-item class="accordion-item"></i-scom-accordion-item>;
-      await itemElm.setData({...this.items[i]});
-      itemElm.id = `accordion-${i}`
-      itemElm.onClick = this.onClickedItem;
+      const itemElm = await ScomAccordionItem.create({...this.items[i]});
+      itemElm.classList.add('accordion-item');
+      itemElm.id = this.items[i]?.id ?? `accordion-${i}`
+      itemElm.onSelected = this.onClickedItem;
       this.pnlAccordion.appendChild(itemElm);
       this.accordionItemMapper.push(itemElm);
     }
