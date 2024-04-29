@@ -6,6 +6,7 @@ declare module "@scom/scom-accordion/interface.ts" {
         expanded?: boolean;
         defaultExpanded?: boolean;
         onRender: () => Control;
+        showRemove?: boolean;
     }
     export interface IAccordion {
         items: IAccordionItem[];
@@ -32,6 +33,7 @@ declare module "@scom/scom-accordion/commons/accordionItem/index.tsx" {
         defaultExpanded?: boolean;
         onRender?: () => Control;
         onSelected?: onSelectedFn;
+        showRemove?: boolean;
     }
     global {
         namespace JSX {
@@ -45,8 +47,10 @@ declare module "@scom/scom-accordion/commons/accordionItem/index.tsx" {
         private lbTitle;
         private pnlContent;
         private iconExpand;
+        private iconRemove;
         private _data;
         onSelected: onSelectedFn;
+        onRemoved: (target: ScomAccordionItem) => void;
         constructor(parent?: Container, options?: any);
         static create(options?: ScomAccordionItemElement, parent?: Container): Promise<ScomAccordionItem>;
         get name(): string;
@@ -57,11 +61,13 @@ declare module "@scom/scom-accordion/commons/accordionItem/index.tsx" {
         set expanded(value: boolean);
         get onRender(): any;
         set onRender(callback: any);
+        get contentControl(): Control;
         setData(data: IAccordionItem): Promise<void>;
         getData(): IAccordionItem;
         private renderUI;
         private onTogglePanel;
         private updatePanel;
+        private onRemoveClick;
         init(): Promise<void>;
         render(): any;
     }
@@ -70,9 +76,11 @@ declare module "@scom/scom-accordion/commons/accordionItem/index.tsx" {
 declare module "@scom/scom-accordion" {
     import { Container, ControlElement, Module } from '@ijstech/components';
     import { IAccordion, IAccordionItem } from "@scom/scom-accordion/interface.ts";
+    import ScomAccordionItem from "@scom/scom-accordion/commons/accordionItem/index.tsx";
     interface ScomAccordionElement extends ControlElement {
         items?: IAccordionItem[];
         isFlush?: boolean;
+        onCustomItemRemoved?: (item: ScomAccordionItem) => Promise<void>;
     }
     global {
         namespace JSX {
@@ -84,6 +92,7 @@ declare module "@scom/scom-accordion" {
     export default class ScomAccordion extends Module {
         private pnlAccordion;
         private accordionItemMapper;
+        onCustomItemRemoved: (item: ScomAccordionItem) => Promise<void>;
         private _data;
         constructor(parent?: Container, options?: any);
         static create(options?: ScomAccordionElement, parent?: Container): Promise<ScomAccordion>;
@@ -93,9 +102,13 @@ declare module "@scom/scom-accordion" {
         set isFlush(value: boolean);
         setData(data: IAccordion): Promise<void>;
         getData(): IAccordion;
-        private resetData;
+        resetData(): void;
         private renderUI;
+        addItem(item: IAccordionItem): Promise<ScomAccordionItem>;
+        updateItemName(id: string, name: string): void;
+        removeItem(id: string): void;
         private onClickedItem;
+        private onItemRemoved;
         init(): Promise<void>;
         render(): any;
     }

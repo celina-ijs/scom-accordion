@@ -65,25 +65,23 @@ define("@scom/scom-accordion/commons/accordionItem/index.tsx", ["require", "expo
             return self;
         }
         get name() {
-            var _a;
-            return (_a = this._data.name) !== null && _a !== void 0 ? _a : '';
+            return this._data.name ?? '';
         }
         set name(value) {
-            this._data.name = value !== null && value !== void 0 ? value : '';
+            this._data.name = value ?? '';
+            this.lbTitle.caption = value;
         }
         get defaultExpanded() {
-            var _a;
-            return (_a = this._data.defaultExpanded) !== null && _a !== void 0 ? _a : false;
+            return this._data.defaultExpanded ?? false;
         }
         set defaultExpanded(value) {
-            this._data.defaultExpanded = value !== null && value !== void 0 ? value : false;
+            this._data.defaultExpanded = value ?? false;
         }
         get expanded() {
-            var _a;
-            return (_a = this._data.expanded) !== null && _a !== void 0 ? _a : false;
+            return this._data.expanded ?? false;
         }
         set expanded(value) {
-            this._data.expanded = value !== null && value !== void 0 ? value : false;
+            this._data.expanded = value ?? false;
             this.updatePanel();
         }
         get onRender() {
@@ -91,6 +89,9 @@ define("@scom/scom-accordion/commons/accordionItem/index.tsx", ["require", "expo
         }
         set onRender(callback) {
             this._data.onRender = callback;
+        }
+        get contentControl() {
+            return this.pnlContent.children[0];
         }
         async setData(data) {
             this._data = data;
@@ -100,10 +101,9 @@ define("@scom/scom-accordion/commons/accordionItem/index.tsx", ["require", "expo
             return this._data;
         }
         async renderUI() {
-            var _a;
             if (!this.lbTitle.isConnected)
                 await this.lbTitle.ready();
-            this.lbTitle.caption = (_a = this._data.name) !== null && _a !== void 0 ? _a : '';
+            this.lbTitle.caption = this._data.name ?? '';
             if (!this.pnlContent.isConnected)
                 await this.pnlContent.ready();
             this.pnlContent.clearInnerHTML();
@@ -115,6 +115,7 @@ define("@scom/scom-accordion/commons/accordionItem/index.tsx", ["require", "expo
                 }
             }
             this.expanded = !this.expanded && this.defaultExpanded;
+            this.iconRemove.visible = this._data.showRemove;
         }
         onTogglePanel(target, event) {
             // this.expanded = !this.expanded;
@@ -135,19 +136,26 @@ define("@scom/scom-accordion/commons/accordionItem/index.tsx", ["require", "expo
                 this.pnlAccordionItem.classList.remove('expanded');
             }
         }
+        onRemoveClick() {
+            if (this.onRemoved)
+                this.onRemoved(this);
+        }
         async init() {
             super.init();
             this.onSelected = this.getAttribute('onSelected', true) || this.onSelected;
             const name = this.getAttribute('name', true);
             const defaultExpanded = this.getAttribute('defaultExpanded', true, false);
             const onRender = this.getAttribute('onRender', true);
-            await this.setData({ name, defaultExpanded, onRender });
+            const showRemove = this.getAttribute('showRemove', true, false);
+            await this.setData({ name, defaultExpanded, onRender, showRemove });
         }
         render() {
             return (this.$render("i-vstack", { id: "pnlAccordionItem", padding: { top: '0.5rem', bottom: '0.5rem', left: '0.5rem', right: '0.5rem' }, class: index_css_1.customStyles },
                 this.$render("i-hstack", { horizontalAlignment: "space-between", verticalAlignment: "center", padding: { top: '0.5rem', bottom: '0.5rem' }, class: "pointer accordion-header", onClick: this.onTogglePanel },
                     this.$render("i-label", { id: "lbTitle", caption: '', font: { size: '1rem' }, lineHeight: 1.3 }),
-                    this.$render("i-icon", { id: "iconExpand", width: 20, height: 28, fill: Theme.text.primary, name: "angle-down" })),
+                    this.$render("i-hstack", { verticalAlignment: "center", gap: '0.5rem' },
+                        this.$render("i-icon", { id: "iconExpand", width: 20, height: 28, fill: Theme.text.primary, name: "angle-down" }),
+                        this.$render("i-icon", { id: "iconRemove", width: 20, height: 20, fill: Theme.text.primary, name: "times", visible: false, onClick: this.onRemoveClick }))),
                 this.$render("i-panel", { id: "pnlContent", class: `accordion-body ${index_css_1.expandablePanelStyle}` })));
         }
     };
@@ -174,18 +182,16 @@ define("@scom/scom-accordion", ["require", "exports", "@ijstech/components", "@s
             return self;
         }
         get items() {
-            var _a;
-            return (_a = this._data.items) !== null && _a !== void 0 ? _a : [];
+            return this._data.items ?? [];
         }
         set items(value) {
-            this._data.items = value !== null && value !== void 0 ? value : [];
+            this._data.items = value ?? [];
         }
         get isFlush() {
-            var _a;
-            return (_a = this._data.isFlush) !== null && _a !== void 0 ? _a : false;
+            return this._data.isFlush ?? false;
         }
         set isFlush(value) {
-            this._data.isFlush = value !== null && value !== void 0 ? value : false;
+            this._data.isFlush = value ?? false;
         }
         async setData(data) {
             this._data = data;
@@ -195,19 +201,40 @@ define("@scom/scom-accordion", ["require", "exports", "@ijstech/components", "@s
             return this._data;
         }
         resetData() {
+            this.items = [];
             this.pnlAccordion.clearInnerHTML();
             this.accordionItemMapper = [];
         }
         async renderUI() {
-            var _a, _b;
-            this.resetData();
+            this.pnlAccordion.clearInnerHTML();
+            this.accordionItemMapper = [];
             for (let i = 0; i < this.items.length; i++) {
-                const itemElm = await index_1.default.create(Object.assign({}, this.items[i]));
-                itemElm.classList.add('accordion-item');
-                itemElm.id = (_b = (_a = this.items[i]) === null || _a === void 0 ? void 0 : _a.id) !== null && _b !== void 0 ? _b : `accordion-${i}`;
-                itemElm.onSelected = this.onClickedItem;
-                this.pnlAccordion.appendChild(itemElm);
-                this.accordionItemMapper.push(itemElm);
+                await this.addItem({ ...this.items[i] });
+            }
+        }
+        async addItem(item) {
+            const itemElm = await index_1.default.create(item);
+            itemElm.classList.add('accordion-item');
+            // itemElm.id = item.id ?? `accordion-${this.items.length}`
+            itemElm.id = item.id ?? itemElm.uuid;
+            itemElm.onSelected = this.onClickedItem;
+            itemElm.onRemoved = this.onItemRemoved.bind(this);
+            this.pnlAccordion.appendChild(itemElm);
+            this.accordionItemMapper.push(itemElm);
+            this.items.push(item);
+            return itemElm;
+        }
+        updateItemName(id, name) {
+            const item = this.accordionItemMapper.find(item => item.id === id);
+            if (item)
+                item.name = name;
+        }
+        removeItem(id) {
+            const item = this.accordionItemMapper.find(item => item.id === id);
+            if (item) {
+                item.remove();
+                this.accordionItemMapper = this.accordionItemMapper.filter(item => item.id !== id);
+                this.items = this.items.filter(item => item.id !== id);
             }
         }
         onClickedItem(target) {
@@ -222,10 +249,17 @@ define("@scom/scom-accordion", ["require", "exports", "@ijstech/components", "@s
             if (currentActive)
                 currentActive.expanded = !currentActive.expanded;
         }
+        async onItemRemoved(target) {
+            const id = target.id;
+            this.removeItem(id);
+            if (this.onCustomItemRemoved)
+                await this.onCustomItemRemoved(target);
+        }
         async init() {
             super.init();
             const items = this.getAttribute('items', true, []);
             const isFlush = this.getAttribute('isFlush', true, false);
+            this.onCustomItemRemoved = this.getAttribute('onCustomItemRemoved', true);
             await this.setData({ items, isFlush });
         }
         render() {

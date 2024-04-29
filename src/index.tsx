@@ -13,6 +13,7 @@ import ScomAccordionItem from './commons/accordionItem/index';
 interface ScomAccordionElement extends ControlElement {
   items?: IAccordionItem[];
   isFlush?: boolean;
+  onCustomItemRemoved?: (item: ScomAccordionItem) => Promise<void>;
 }
 
 declare global {
@@ -27,6 +28,7 @@ declare global {
 export default class ScomAccordion extends Module {
   private pnlAccordion: VStack;
   private accordionItemMapper: ScomAccordionItem[];
+  public onCustomItemRemoved: (item: ScomAccordionItem) => Promise<void>;
 
   private _data: IAccordion = {
     items: []
@@ -68,24 +70,48 @@ export default class ScomAccordion extends Module {
     return this._data;
   }
 
-  private resetData() {
+  resetData() {
+    this.items = [];
     this.pnlAccordion.clearInnerHTML();
     this.accordionItemMapper = [];
   }
 
   private async renderUI() {
-    this.resetData();
+    this.pnlAccordion.clearInnerHTML();
+    this.accordionItemMapper = [];
     for (let i = 0; i < this.items.length; i++) {
-      const itemElm = await ScomAccordionItem.create({...this.items[i]});
-      itemElm.classList.add('accordion-item');
-      itemElm.id = this.items[i]?.id ?? `accordion-${i}`
-      itemElm.onSelected = this.onClickedItem;
-      this.pnlAccordion.appendChild(itemElm);
-      this.accordionItemMapper.push(itemElm);
+      await this.addItem({...this.items[i]});
     }
   }
 
-  private onClickedItem(target: Control) {
+  async addItem(item: IAccordionItem) {
+    const itemElm = await ScomAccordionItem.create(item);
+    itemElm.classList.add('accordion-item');
+    // itemElm.id = item.id ?? `accordion-${this.items.length}`
+    itemElm.id = item.id ?? itemElm.uuid;
+    itemElm.onSelected = this.onClickedItem;
+    itemElm.onRemoved = this.onItemRemoved.bind(this);
+    this.pnlAccordion.appendChild(itemElm);
+    this.accordionItemMapper.push(itemElm);
+    this.items.push(item);
+    return itemElm;
+  }
+
+  updateItemName(id: string, name: string) {
+    const item = this.accordionItemMapper.find(item => item.id === id);
+    if (item) item.name = name;
+  }
+
+  removeItem(id: string) {
+    const item = this.accordionItemMapper.find(item => item.id === id);
+    if (item) {
+      item.remove();
+      this.accordionItemMapper = this.accordionItemMapper.filter(item => item.id !== id);
+      this.items = this.items.filter(item => item.id !== id);
+    }
+  }
+
+  private onClickedItem(target: ScomAccordionItem) {
     const id = target.id;
     const currentActive = this.accordionItemMapper.find(item => item.id === id);
     if (this.isFlush) {
@@ -96,10 +122,17 @@ export default class ScomAccordion extends Module {
     if (currentActive) currentActive.expanded = !currentActive.expanded;
   }
 
+  private async onItemRemoved(target: ScomAccordionItem) {
+    const id = target.id;
+    this.removeItem(id);
+    if (this.onCustomItemRemoved) await this.onCustomItemRemoved(target);
+  }
+
   async init() {
     super.init();
     const items = this.getAttribute('items', true, []);
     const isFlush = this.getAttribute('isFlush', true, false);
+    this.onCustomItemRemoved = this.getAttribute('onCustomItemRemoved', true);
     await this.setData({ items, isFlush });
   }
 

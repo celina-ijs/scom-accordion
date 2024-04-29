@@ -20,6 +20,7 @@ interface ScomAccordionItemElement extends ControlElement {
   defaultExpanded?: boolean;
   onRender?: () => Control;
   onSelected?: onSelectedFn;
+  showRemove?: boolean;
 }
 
 declare global {
@@ -36,10 +37,12 @@ export default class ScomAccordionItem extends Module {
   private lbTitle: Label;
   private pnlContent: Panel;
   private iconExpand: Icon;
+  private iconRemove: Icon;
 
   private _data: IAccordionItem;
 
   public onSelected: onSelectedFn;
+  public onRemoved: (target: ScomAccordionItem) => void;
 
   constructor(parent?: Container, options?: any) {
     super(parent, options);
@@ -56,6 +59,7 @@ export default class ScomAccordionItem extends Module {
   }
   set name(value: string) {
     this._data.name = value ?? '';
+    this.lbTitle.caption = value;
   }
 
   get defaultExpanded() {
@@ -80,6 +84,10 @@ export default class ScomAccordionItem extends Module {
     this._data.onRender = callback;
   }
 
+  get contentControl() {
+    return this.pnlContent.children[0] as Control;
+  }
+
   async setData(data: IAccordionItem) {
     this._data = data;
     await this.renderUI();
@@ -102,6 +110,7 @@ export default class ScomAccordionItem extends Module {
       }
     }
     this.expanded = !this.expanded && this.defaultExpanded;
+    this.iconRemove.visible = this._data.showRemove;
   }
 
   private onTogglePanel(target: Control, event: MouseEvent) {
@@ -123,13 +132,18 @@ export default class ScomAccordionItem extends Module {
     }
   }
 
+  private onRemoveClick() {
+    if (this.onRemoved) this.onRemoved(this);
+  }
+
   async init() {
     super.init();
     this.onSelected = this.getAttribute('onSelected', true) || this.onSelected;
     const name = this.getAttribute('name', true);
     const defaultExpanded = this.getAttribute('defaultExpanded', true, false);
     const onRender = this.getAttribute('onRender', true);
-    await this.setData({ name, defaultExpanded, onRender });
+    const showRemove = this.getAttribute('showRemove', true, false);
+    await this.setData({ name, defaultExpanded, onRender, showRemove });
   }
 
   render() {
@@ -147,7 +161,10 @@ export default class ScomAccordionItem extends Module {
           onClick={this.onTogglePanel}
         >
           <i-label id="lbTitle" caption='' font={{ size: '1rem' }} lineHeight={1.3}></i-label>
-          <i-icon id="iconExpand" width={20} height={28} fill={Theme.text.primary} name="angle-down"></i-icon>
+          <i-hstack verticalAlignment="center" gap='0.5rem'>
+            <i-icon id="iconExpand" width={20} height={28} fill={Theme.text.primary} name="angle-down"></i-icon>
+            <i-icon id="iconRemove" width={20} height={20} fill={Theme.text.primary} name="times" visible={false} onClick={this.onRemoveClick}></i-icon>
+          </i-hstack>
         </i-hstack>
         <i-panel id="pnlContent" class={`accordion-body ${expandablePanelStyle}`}></i-panel>   
       </i-vstack>

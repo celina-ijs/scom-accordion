@@ -5,6 +5,7 @@ export interface IAccordionItem extends ControlElement {
   expanded?: boolean;
   defaultExpanded?: boolean;
   onRender: () => Control;
+  showRemove?: boolean;
 }
 
 export interface IAccordion {
