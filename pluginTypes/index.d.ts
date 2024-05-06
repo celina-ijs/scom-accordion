@@ -104,6 +104,7 @@ declare module "@scom/scom-accordion" {
         getData(): IAccordion;
         resetData(): void;
         private renderUI;
+        private createAccordionItem;
         addItem(item: IAccordionItem): Promise<ScomAccordionItem>;
         updateItemName(id: string, name: string): void;
         removeItem(id: string): void;

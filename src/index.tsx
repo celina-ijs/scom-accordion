@@ -80,11 +80,12 @@ export default class ScomAccordion extends Module {
     this.pnlAccordion.clearInnerHTML();
     this.accordionItemMapper = [];
     for (let i = 0; i < this.items.length; i++) {
-      await this.addItem({...this.items[i]});
+      const item = {...this.items[i]};
+      await this.createAccordionItem(item);
     }
   }
 
-  async addItem(item: IAccordionItem) {
+  private async createAccordionItem(item: IAccordionItem) {
     const itemElm = await ScomAccordionItem.create(item);
     itemElm.classList.add('accordion-item');
     // itemElm.id = item.id ?? `accordion-${this.items.length}`
@@ -93,6 +94,11 @@ export default class ScomAccordion extends Module {
     itemElm.onRemoved = this.onItemRemoved.bind(this);
     this.pnlAccordion.appendChild(itemElm);
     this.accordionItemMapper.push(itemElm);
+    return itemElm;
+  }
+  
+  async addItem(item: IAccordionItem) {
+    const itemElm = await this.createAccordionItem(item);
     this.items.push(item);
     return itemElm;
   }

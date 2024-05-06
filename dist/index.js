@@ -209,10 +209,11 @@ define("@scom/scom-accordion", ["require", "exports", "@ijstech/components", "@s
             this.pnlAccordion.clearInnerHTML();
             this.accordionItemMapper = [];
             for (let i = 0; i < this.items.length; i++) {
-                await this.addItem({ ...this.items[i] });
+                const item = { ...this.items[i] };
+                await this.createAccordionItem(item);
             }
         }
-        async addItem(item) {
+        async createAccordionItem(item) {
             const itemElm = await index_1.default.create(item);
             itemElm.classList.add('accordion-item');
             // itemElm.id = item.id ?? `accordion-${this.items.length}`
@@ -221,6 +222,10 @@ define("@scom/scom-accordion", ["require", "exports", "@ijstech/components", "@s
             itemElm.onRemoved = this.onItemRemoved.bind(this);
             this.pnlAccordion.appendChild(itemElm);
             this.accordionItemMapper.push(itemElm);
+            return itemElm;
+        }
+        async addItem(item) {
+            const itemElm = await this.createAccordionItem(item);
             this.items.push(item);
             return itemElm;
         }
